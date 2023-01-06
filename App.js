@@ -1,44 +1,227 @@
-var dragContainer = document.querySelector('.drag-container');
-var itemContainers = [].slice.call(document.querySelectorAll('.board-column-content'));
-var columnGrids = [];
-var boardGrid;
+const createTaskRef = document.querySelector(".create-task");
 
-// Init the column grids so we can drag those items around.
-itemContainers.forEach(function (container) {
-  var grid = new Muuri(container, {
-    items: '.board-item',
-    dragEnabled: true,
-    dragSort: function () {
-      return columnGrids;
-    },
-    dragContainer: dragContainer,
-    dragAutoScroll: {
-      targets: (item) => {
-        return [
-          { element: window, priority: 0 },
-          { element: item.getGrid().getElement().parentNode, priority: 1 },
-        ];
-      }
-    },
-  })
-  .on('dragInit', function (item) {
-    item.getElement().style.width = item.getWidth() + 'px';
-    item.getElement().style.height = item.getHeight() + 'px';
-  })
-  .on('dragReleaseEnd', function (item) {
-    item.getElement().style.width = '';
-    item.getElement().style.height = '';
-    item.getGrid().refreshItems([item]);
-  })
-  .on('layoutStart', function () {
-    boardGrid.refreshItems().layout();
-  });
+const root = document.querySelector(":root");
 
-  columnGrids.push(grid);
+const modal = document.querySelector(".modal")
+modal.style.display="none";
+
+const taskStatus = {
+    OPEN : "open",
+    INPROGRESS: "inProgress",
+    INPRVIEW: "inReview",
+    DONE: "done"
+}
+
+const openTask = document.getElementById("open");
+const inProgressTask = document.getElementById("inProgress");
+const inReviewTask = document.getElementById("inReview");
+const doneTask = document.getElementById("done");
+
+const tasks = [];
+// const openTasks = [];
+// const inProgressTasks = [];
+// const inReviewTasks = [];
+// const doneTasks = [];
+let uid=1;
+
+// function generateID(){
+//     return id++;
+// }
+
+document.querySelectorAll(".tasks").forEach(task=>{
+    new Sortable(task,
+        {
+            group: 'shared',
+            ghostClass: 'ghost',
+            animation:200,
+            
+            setData: function (dataTransfer, dragEl) {
+                dataTransfer.setData('Text', dragEl.textContent);
+                //console.log(dragEl.id);
+            },
+            onAdd: function (/**Event*/evt) {
+                console.log();
+                tasks.forEach(t=>{
+                    if(Number(evt.item.id)==t.id){
+                        t.status=evt.target.id;
+                    }
+                })
+            },
+            
+        }
+        
+        
+
+    )
+})
+
+function render(){
+    document.querySelectorAll(".tasks").forEach(task=>{
+        task.innerHTML='';
+    });
+    console.log("total tasks: "+tasks.length);
+    tasks.forEach(task=>{
+        const div = document.createElement("div");
+        div.className="task card p-2 rounded-0";
+        div.id=task.id;
+        div.onclick=(event)=>{showModal(event,task.id)};
+        
+
+        const divBody = document.createElement("div");
+        divBody.className="card-body p-2";
+        divBody.style.height="80px";
+        divBodyid=task.id;
+        
+        const title = document.createElement("h5");
+        title.className="card-title";
+        title.innerText = task.title;
+        title.id=task.id;
+
+        const description = document.createElement("p");
+        description.className = "card-text text-truncate w-100";
+        description.innerText = task.desc;
+        description.id=task.id;
+
+        divBody.appendChild(title);
+        divBody.appendChild(description);
+        div.appendChild(divBody);
+        if(task.status === taskStatus.OPEN){
+            openTask.appendChild(div);
+        }else if(task.status === taskStatus.INPROGRESS){
+            inProgressTask.appendChild(div);
+        }else if(taskStatus === taskStatus.INPRVIEW){
+            inReviewTask.appendChild(div);
+        }else{
+            doneTask.appendChild(div);
+        }
+    });
+}
+
+
+function createTaskHandler(event){
+    //console.log(event.key);
+    showModal(event,0);
+}
+
+document.querySelector(".create-task").addEventListener("click", createTaskHandler);
+
+document.querySelector(".close").onclick=function(){
+    modal.style.display="none";
+}
+
+document.querySelectorAll(".task").forEach(task=>{
+    task.addEventListener("click",(event)=>{
+        const taskId = event.event.currentTarget.id;
+        
+        showModal(event,taskId)
+    });
+})
+
+
+function showModal(event,taskId){
+    console.log("task Id is "+event.target.id);
+    //console.log("Src ELement "+event.currentTarget.outerHTML);
+    modal.style.display="flex";
+    if(taskId==0){
+        
+        event.target.setAttribute("taskCategory",'open');
+    }else{
+        taskId=event.target.id;
+    }
+    const taskCategory = event.target.getAttribute("taskCategory");
+    
+    
+    const title= document.getElementById("modal-title");
+    const desc= document.getElementById("modal-desc");
+    const id = document.getElementById("id");
+    const category = document.getElementById("category");
+    const modalRef = document.querySelector(".modal-header");
+    if(taskId==0){
+        title.value= '';
+        desc.value='';
+        id.value= uid;
+        category.value='open';
+        document.getElementById("deleteTask").disabled = true;
+        modalRef.style.backgroundColor = "blueviolet";
+    }
+    else{
+        const task = tasks.find(x => x.id === taskId);
+        console.log(JSON.stringify(task));
+        title.value= task.title;
+        desc.value=task.desc;
+        id.value=task.id;
+        category.value=task.status;
+        document.getElementById("deleteTask").disabled = false;
+        
+    }
+    var result = tasks.find(task => task.id === id.value);
+    if(result.status==taskStatus.OPEN){
+        modalRef.style.backgroundColor = "blueviolet";
+    }else if(result.status==taskStatus.INPROGRESS){
+        modalRef.style.backgroundColor = "yellowgreen";
+    }else if(result.status==taskStatus.INPRVIEW){
+        modalRef.style.backgroundColor = "rgb(235, 60, 208)";
+    }else{
+        modalRef.style.backgroundColor = "green";
+    }
+    //console.log(tasks[event.target.id-1].title);
+    
+    
+
+}
+
+const saveHandler = (event) => {
+    event.preventDefault();
+    const title= document.getElementById("modal-title");
+    const desc= document.getElementById("modal-desc");
+    const id = document.getElementById("id");
+    const category = document.getElementById("category");
+    if(title.value==''){
+        alert("Please enter Title");
+        return;
+    }
+    const data = {
+        "id":id.value,
+        "title":title.value,
+        "desc":desc.value,
+        "status":category.value
+    }
+    console.log("The data is "+ JSON.stringify(data));
+    // if(category==='open'){
+    //     openTasks.unshift(data);
+    // }else if(category === 'inProgress'){
+    //     inProgressTasks.unshift(data);
+    // }else if(category === 'inReview'){
+    //     inReviewTasks.unshift(data);
+    // }else if(category === 'done'){
+    //     doneTasks.unshift(data);
+    // }
+    
+    if(tasks.findIndex( x => x.id == data.id) !== -1){
+        tasks.map(task => {
+            if(task.id===data.id){
+                task.title=data.title;
+                task.desc=data.desc;
+                return task;
+            }else{
+                return task;
+            }
+        })
+    }else{
+        uid++;
+        tasks.unshift(data);
+    }
+    
+    modal.style.display="none";
+    render();
+    
+}
+
+document.querySelector("#save").addEventListener("click", saveHandler);
+document.getElementById("deleteTask").addEventListener("click",(event)=>{
+    const ID = document.getElementById("id").value;
+    tasks.splice(tasks.findIndex((task) => task.id === ID), 1);
+    modal.style.display="none";
+    render();
 });
-
-// Init board grid so we can drag those columns around.
-boardGrid = new Muuri('.board', {
-  dragEnabled: false,
-  dragHandle: '.board-column-header'
-});
+Footer
