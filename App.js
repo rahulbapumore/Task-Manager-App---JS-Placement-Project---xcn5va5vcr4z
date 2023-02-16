@@ -28,7 +28,7 @@ let uid=1;
 //     return id++;
 // }
 
-document.getElementById("login").addEventListener(() => {
+document.getElementById("login").addEventListener("click",() => {
     alert("hi")
 })
 document.querySelectorAll(".tasks").forEach(task=>{
