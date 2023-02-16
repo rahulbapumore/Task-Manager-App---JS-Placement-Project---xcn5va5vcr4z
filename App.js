@@ -28,6 +28,9 @@ let uid=1;
 //     return id++;
 // }
 
+document.getElementById("login").addEventListener(() => {
+    alert("hi")
+})
 document.querySelectorAll(".tasks").forEach(task=>{
     new Sortable(task,
         {
