@@ -29,17 +29,17 @@ let uid=1;
 // }
 
 document.getElementById("login").addEventListener("click",() => {
-    document.getElementsByName("body")[0].style.backgroundColor = "red";
+    document.getElementsByTagName("body")[0].style.backgroundColor = "red";
 })
 
 
 document.getElementById("signup").addEventListener("click",() => {
-    document.getElementsByName("body")[0].style.backgroundColor = "yellow";
+    document.getElementsByTagName("body")[0].style.backgroundColor = "yellow";
 })
 
 
 document.getElementById("help").addEventListener("click",() => {
-    document.getElementsByName("body")[0].style.backgroundColor = "green";
+    document.getElementsByTagName("body")[0].style.backgroundColor = "green";
 })
 document.querySelectorAll(".tasks").forEach(task=>{
     new Sortable(task,
